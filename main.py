@@ -4,7 +4,7 @@ import random
 
 import torch
 from src import AdaBoostClassifier, BaggingClassifier, DecisionTree
-from src.utils import preprocess, plot_learners_roc
+from src.utils import preprocess, plot_learners_roc, plot_feature_importance
 
 
 def main():
@@ -44,19 +44,20 @@ def main():
     _ = clf_adaboost.fit(
         X_train,
         y_train,
-        num_epochs=...,
-        learning_rate=...,
+        num_epochs=1000,
+        learning_rate=0.001,
     )
     y_pred_classes, y_pred_probs = clf_adaboost.predict_learners(X_test)
-    accuracy_ = ...
+    accuracy_ = (y_pred_classes == y_test).mean()
     logger.info(f'AdaBoost - Accuracy: {accuracy_:.4f}')
     plot_learners_roc(
-        y_preds=y_pred_probs,
-        y_trues=y_test,
-        fpath=...,
-    )
+        y_preds=y_pred_probs, 
+        y_trues=y_test, 
+        fpath='adaboost_roc.png'
+    ) 
     feature_importance = clf_adaboost.compute_feature_importance()
     # (TODO) Draw the feature importance
+    plot_feature_importance(feature_importance, X_train.columns, fpath='adaboost_feature_importance.png')
 
     # Bagging
     clf_bagging = BaggingClassifier(
@@ -65,27 +66,29 @@ def main():
     _ = clf_bagging.fit(
         X_train,
         y_train,
-        num_epochs=...,
-        learning_rate=...,
+        num_epochs=1000,
+        learning_rate=0.001,
     )
     y_pred_classes, y_pred_probs = clf_bagging.predict_learners(X_test)
-    accuracy_ = ...
+    accuracy_ = (y_pred_classes == y_test).mean()
     logger.info(f'Bagging - Accuracy: {accuracy_:.4f}')
     plot_learners_roc(
         y_preds=y_pred_probs,
         y_trues=y_test,
-        fpath=...,
+        fpath='bagging_roc.png',
     )
     feature_importance = clf_bagging.compute_feature_importance()
     # (TODO) Draw the feature importance
-
+    plot_feature_importance(feature_importance, X_train.columns, fpath='bagging_feature_importance.png')
+    
+    
     # Decision Tree
     clf_tree = DecisionTree(
-        max_depth=...,
+        max_depth=3,
     )
     clf_tree.fit(X_train, y_train)
     y_pred_classes = clf_tree.predict(X_test)
-    accuracy_ = ...
+    accuracy_ = (y_pred_classes == y_test).mean()
     logger.info(f'DecisionTree - Accuracy: {accuracy_:.4f}')
 
 
