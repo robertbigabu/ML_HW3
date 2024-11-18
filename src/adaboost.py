@@ -32,7 +32,7 @@ class AdaBoostClassifier:
         X_train = X_train.to_numpy()
 
         for model in self.learners:
-            optimizer = optim.SGD(model.parameters(), lr=learning_rate)
+            optimizer = optim.Adam (model.parameters(), lr=learning_rate)
 
             for epoch in range(num_epochs): # Train each WeakClassifier
                 # Convert data and weights to tensors
@@ -48,12 +48,14 @@ class AdaBoostClassifier:
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
+                
+                # print(f"WeakClassifier Training - Epoch {epoch}, Loss: {loss.item()}")
 
             losses_of_models.append(loss.item())
 
             # Calculate predicted class and error for updating sample weights
             with torch.no_grad():
-                pred_class = (torch.sigmoid(pred).numpy() > 0.5).astype(int)
+                pred_class = (pred.numpy() > 0).astype(int)
             error = np.sum(self.sample_weights * (pred_class != y_train)) / np.sum(self.sample_weights)
             print(error)
 
@@ -63,7 +65,7 @@ class AdaBoostClassifier:
             self.alphas.append(alpha)
             
             # Update sample weights
-            self.sample_weights *= np.exp(-alpha * y_train * (2 * pred_class - 1))
+            self.sample_weights *= np.exp(-alpha * (2 * y_train - 1) * (2 * pred_class - 1))
             self.sample_weights /= np.sum(self.sample_weights)  # Normalize
 
         return losses_of_models

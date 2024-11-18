@@ -34,8 +34,8 @@ class BaggingClassifier:
 
             for epoch in range(num_epochs):
                 # Convert data and weights to tensors
-                X_tensor = torch.tensor(X_train, dtype=torch.float32)
-                y_tensor = torch.tensor(y_train, dtype=torch.float32)
+                X_tensor = torch.tensor(X_sample, dtype=torch.float32)
+                y_tensor = torch.tensor(y_sample, dtype=torch.float32)
 
                 # Compute prediction and loss
                 pred = model(X_tensor).squeeze()

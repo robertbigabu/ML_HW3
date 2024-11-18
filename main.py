@@ -45,7 +45,7 @@ def main():
         X_train,
         y_train,
         num_epochs=1000,
-        learning_rate=0.001,
+        learning_rate=0.0001,
     )
     y_pred_classes, y_pred_probs = clf_adaboost.predict_learners(X_test)
     accuracy_ = (y_pred_classes == y_test).mean()
@@ -66,8 +66,8 @@ def main():
     _ = clf_bagging.fit(
         X_train,
         y_train,
-        num_epochs=1000,
-        learning_rate=0.001,
+        num_epochs=500,
+        learning_rate=0.01,
     )
     y_pred_classes, y_pred_probs = clf_bagging.predict_learners(X_test)
     accuracy_ = (y_pred_classes == y_test).mean()
@@ -84,7 +84,7 @@ def main():
     
     # Decision Tree
     clf_tree = DecisionTree(
-        max_depth=3,
+        max_depth=2,
     )
     clf_tree.fit(X_train, y_train)
     y_pred_classes = clf_tree.predict(X_test)

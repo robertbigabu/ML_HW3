@@ -34,9 +34,9 @@ class WeakClassifier(nn.Module): #create a class that inherits from nn.Module.
         super(WeakClassifier, self).__init__()
         self.flatten = nn.Flatten()
         self.linear_relu_stack = nn.Sequential(
-            nn.Linear(input_dim, 10),
+            nn.Linear(input_dim, 1),
             nn.ReLU(),
-            nn.Linear(10, 1)
+            nn.Linear(1, 1),
         )
         # self.model = nn.Linear(input_dim, 1)
 
@@ -47,15 +47,13 @@ class WeakClassifier(nn.Module): #create a class that inherits from nn.Module.
 
 
 def accuracy_score(y_trues, y_preds) -> float:
-    # raise NotImplementedError
-    y_preds = (y_preds > 0.5)
-    return (y_trues == y_preds).mean().item()
+    raise NotImplementedError
+
 
 
 def entropy_loss(outputs, targets):
-    # raise NotImplementedError
-    loss_fn = nn.BCEWithLogitsLoss()
-    return loss_fn(outputs, targets)
+    raise NotImplementedError
+
 
 
 def plot_learners_roc(
