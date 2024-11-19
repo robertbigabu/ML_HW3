@@ -9,34 +9,37 @@ class DecisionTree:
     def __init__(self, max_depth=1):
         self.max_depth = max_depth
         self.tree = None
+        self.feature_importances_ = None
 
     def fit(self, X, y):
-        X = X.to_numpy()
+        self.feature_importances_ = np.zeros(X.shape[1])
+        X = X.to_numpy(dtype=float)
         self.tree = self._grow_tree(X, y)
 
     def _grow_tree(self, X, y, depth=0):
         # raise NotImplementedError
-        # Check stopping conditions
         num_samples, num_features = X.shape
         num_classes = len(np.unique(y))
-        
+
         # Stopping condition
-        if depth >= self.max_depth or num_classes == 1 or num_samples == 0:
+        if depth >= self.max_depth or num_classes == 1 or num_samples < 30:
             leaf_value = self._majority_class(y)
             return {"leaf": leaf_value}
-        
+
         # Find best split
-        feature_index, threshold = find_best_split(X, y)
+        feature_index, threshold, info_gain = find_best_split(X, y)
         if feature_index is None:
             leaf_value = self._majority_class(y)
             return {"leaf": leaf_value}
-        
+
+        self.feature_importances_[feature_index] += info_gain
+
         # Split the data
         left_idx = X[:, feature_index] < threshold
         right_idx = X[:, feature_index] >= threshold
         left_child = self._grow_tree(X[left_idx], y[left_idx], depth + 1)
         right_child = self._grow_tree(X[right_idx], y[right_idx], depth + 1)
-        
+
         return {"feature_index": feature_index, "threshold": threshold, "left": left_child, "right": right_child}
 
     def _majority_class(self, y):
@@ -47,7 +50,7 @@ class DecisionTree:
 
     def predict(self, X):
         # raise NotImplementedError
-        X = X.to_numpy()
+        X = X.to_numpy(dtype=float)
         return np.array([self._predict_tree(x, self.tree) for x in X])
 
     def _predict_tree(self, x, tree_node):
@@ -55,14 +58,18 @@ class DecisionTree:
         # Traverse the tree recursively for prediction
         if "leaf" in tree_node:
             return tree_node["leaf"]
-        
+
         feature_index = tree_node["feature_index"]
         threshold = tree_node["threshold"]
-        
+
         if x[feature_index] < threshold:
             return self._predict_tree(x, tree_node["left"])
         else:
             return self._predict_tree(x, tree_node["right"])
+
+    def compute_feature_importance(self):
+        total_importance = np.sum(self.feature_importances_)
+        return self.feature_importances_ / total_importance if total_importance > 0 else self.feature_importances_
 
 
 # Split dataset based on a feature and threshold
@@ -99,7 +106,7 @@ def find_best_split(X, y):
                 best_feature = feature_index
                 best_threshold = threshold
 
-    return best_feature, best_threshold
+    return best_feature, best_threshold, best_info_gain
 
 
 def entropy(y):

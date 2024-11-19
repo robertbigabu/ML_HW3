@@ -1,27 +1,25 @@
 import typing as t
-import torch
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import torch.nn as nn
 from sklearn.metrics import roc_curve, auc
 
 
-
 def preprocess(df: pd.DataFrame):
     """
     (TODO): Implement your preprocessing function.
     """
-    for col in df.columns:
+    cols = df.columns
+    for col in cols:
         if df[col].dtype == "object":
-            df[col], _ = pd.factorize(df[col])
-        
-        df[col] = (df[col] - df[col].mean()) / df[col].std() # Normalize
+            df = pd.get_dummies(df, columns=[col])
+        else:
+            df[col] = (df[col] - df[col].mean()) / df[col].std()  # Normalize
 
     return df
 
 
-class WeakClassifier(nn.Module): #create a class that inherits from nn.Module.
+class WeakClassifier(nn.Module):  # create a class that inherits from nn.Module.
     """
     Use pyTorch to implement a 1 ~ 2 layers model.
     Here, for example:
@@ -33,27 +31,24 @@ class WeakClassifier(nn.Module): #create a class that inherits from nn.Module.
     def __init__(self, input_dim):
         super(WeakClassifier, self).__init__()
         self.flatten = nn.Flatten()
-        self.linear_relu_stack = nn.Sequential(
-            nn.Linear(input_dim, 1),
-            nn.ReLU(),
-            nn.Linear(1, 1),
+        self.model = nn.Sequential(
+            nn.Linear(input_dim, 5),
+            nn.Linear(5, 1),
         )
         # self.model = nn.Linear(input_dim, 1)
 
     def forward(self, x):
         x = self.flatten(x)
-        logits = self.linear_relu_stack(x)
-        return logits
+        x = self.model(x)
+        return x
 
 
 def accuracy_score(y_trues, y_preds) -> float:
     raise NotImplementedError
 
 
-
 def entropy_loss(outputs, targets):
     raise NotImplementedError
-
 
 
 def plot_learners_roc(
@@ -80,9 +75,35 @@ def plot_learners_roc(
 
 
 def plot_feature_importance(feature_importance, feature_names, fpath='feature_importance.png'):
+
+    feature_importance_dict = dict(zip(feature_names, feature_importance))
+
+    category_mapping = {
+        'loan_intent': ['loan_intent_VENTURE', 'loan_intent_PERSONAL', 'loan_intent_MEDICAL',
+                        'loan_intent_HOMEIMPROVEMENT', 'loan_intent_EDUCATION', 'loan_intent_DEBTCONSOLIDATION'],
+        'person_home_ownership': ['person_home_ownership_RENT', 'person_home_ownership_OWN',
+                                  'person_home_ownership_OTHER', 'person_home_ownership_MORTGAGE'],
+        'person_gender': ['person_gender_male', 'person_gender_female'],
+        'previous_loan_defaults_on_file': ['previous_loan_defaults_on_file_Yes', 'previous_loan_defaults_on_file_No'],
+        'person_education': ['person_education_Master', 'person_education_High School',
+                             'person_education_Doctorate', 'person_education_Bachelor', 'person_education_Associate'],
+        'credit_score': ['credit_score'],
+        'cb_person_cred_hist_length': ['cb_person_cred_hist_length'],
+        'loan_percent_income': ['loan_percent_income'],
+        'loan_int_rate': ['loan_int_rate'],
+        'loan_amnt': ['loan_amnt'],
+        'person_emp_exp': ['person_emp_exp'],
+        'person_income': ['person_income'],
+        'person_age': ['person_age']
+    }
+    aggregated_importance = {}
+    for category, one_hot_features in category_mapping.items():
+        aggregated_importance[category] = sum(
+            feature_importance_dict[feat] for feat in one_hot_features if feat in feature_importance_dict
+        )
+
     plt.figure(figsize=(10, 6))
-    plt.barh(range(len(feature_importance)), feature_importance, align="center")
-    plt.yticks(range(len(feature_importance)), [feature_names[i] for i in range(13)])
+    plt.barh(list(aggregated_importance.keys()), list(aggregated_importance.values()))
     plt.ylabel("Feature")
     plt.xlabel("Importance")
     plt.title("Feature Importance")

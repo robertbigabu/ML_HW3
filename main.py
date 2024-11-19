@@ -44,18 +44,18 @@ def main():
     _ = clf_adaboost.fit(
         X_train,
         y_train,
-        num_epochs=1000,
-        learning_rate=0.0001,
+        num_epochs=500,
+        learning_rate=0.001,
     )
     y_pred_classes, y_pred_probs = clf_adaboost.predict_learners(X_test)
     accuracy_ = (y_pred_classes == y_test).mean()
     logger.info(f'AdaBoost - Accuracy: {accuracy_:.4f}')
     plot_learners_roc(
-        y_preds=y_pred_probs, 
-        y_trues=y_test, 
+        y_preds=y_pred_probs,
+        y_trues=y_test,
         fpath='adaboost_roc.png'
-    ) 
-    feature_importance = clf_adaboost.compute_feature_importance()
+    )
+    feature_importance = clf_adaboost.compute_feature_importance(X_train)
     # (TODO) Draw the feature importance
     plot_feature_importance(feature_importance, X_train.columns, fpath='adaboost_feature_importance.png')
 
@@ -67,7 +67,7 @@ def main():
         X_train,
         y_train,
         num_epochs=500,
-        learning_rate=0.01,
+        learning_rate=0.001,
     )
     y_pred_classes, y_pred_probs = clf_bagging.predict_learners(X_test)
     accuracy_ = (y_pred_classes == y_test).mean()
@@ -77,19 +77,20 @@ def main():
         y_trues=y_test,
         fpath='bagging_roc.png',
     )
-    feature_importance = clf_bagging.compute_feature_importance()
+    feature_importance = clf_bagging.compute_feature_importance(X_train)
     # (TODO) Draw the feature importance
     plot_feature_importance(feature_importance, X_train.columns, fpath='bagging_feature_importance.png')
-    
-    
+
     # Decision Tree
     clf_tree = DecisionTree(
-        max_depth=2,
+        max_depth=7,
     )
     clf_tree.fit(X_train, y_train)
     y_pred_classes = clf_tree.predict(X_test)
     accuracy_ = (y_pred_classes == y_test).mean()
     logger.info(f'DecisionTree - Accuracy: {accuracy_:.4f}')
+    feature_importance = clf_tree.compute_feature_importance()
+    plot_feature_importance(feature_importance, X_train.columns, fpath='tree_feature_importance.png')
 
 
 if __name__ == '__main__':
